@@ -17,10 +17,10 @@ public class Main extends Application {
 
     @Override
     public void start(Stage primaryStage) throws Exception {
-        /*Parent root = FXMLLoader.load(getClass().getResource("sample.fxml"));
+        Parent root = FXMLLoader.load(getClass().getResource("sample.fxml"));
         primaryStage.setTitle("New App");
         primaryStage.setScene(new Scene(root));
-        primaryStage.show();*/
+        primaryStage.show();
         /*int n = 1000000000;
         long start, finish;
         start = System.currentTimeMillis();
@@ -32,10 +32,9 @@ public class Main extends Application {
         finish = System.currentTimeMillis();
         double elapsed = ((double)(finish - start)) / 1000;
         System.out.println("Elapsed time: " + (elapsed));*/
-        BesselPolynom b = new BesselPolynom();
-        //System.out.println(b.comb(0,100));
+        /*BesselPolynom b = new BesselPolynom();
         Platform.exit();
-        System.exit(0);
+        System.exit(0);*/
     }
 
 
