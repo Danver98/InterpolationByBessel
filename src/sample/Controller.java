@@ -17,10 +17,10 @@ public class Controller {
 
     private IntegerProperty precision = new SimpleIntegerProperty(2);
     private Function<Double,Double> function;
-    public static String alphaCode = "\u03B1";
-    public static String betaCode = "\u03B2";
-    public static String epsCode = "\u03B5";
-    public static String muCode = "\u03BC";
+    public static String alphaCode = "\u03B1"+":";
+    public static String betaCode = "\u03B2"+":";
+    public static String epsCode = "\u03B5"+":";
+    public static String muCode = "\u03BC"+":";
 
     @FXML
     private LineChart<Double,Double> lineChart;

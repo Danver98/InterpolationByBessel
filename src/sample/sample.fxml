@@ -17,10 +17,10 @@
     <children>
         <LineChart fx:id="lineChart" createSymbols="false" legendVisible="false" prefHeight="831.0" prefWidth="831.0" title="lineChart" visible="true" GridPane.columnIndex="1">
             <xAxis>
-                <NumberAxis autoRanging="false" label="xAxis" lowerBound="-10" tickUnit="0.5" upperBound="10" fx:id="xAxis" />
+                <NumberAxis autoRanging="false" label="Точки" lowerBound="-10" tickUnit="0.5" upperBound="10" fx:id="xAxis" />
         </xAxis>
             <yAxis>
-                <NumberAxis fx:id="yAxis" autoRanging="false" label="yAxis" lowerBound="-10" side="LEFT" tickUnit="1" upperBound="10" />
+                <NumberAxis fx:id="yAxis" autoRanging="false" label="Значения" lowerBound="-10" side="LEFT" tickUnit="1" upperBound="10" />
             </yAxis>
             <cursor>
                 <Cursor fx:constant="CROSSHAIR" />
@@ -38,15 +38,15 @@
       </HBox>
       <VBox alignment="CENTER" prefHeight="545.0" prefWidth="100.0" spacing="5.0">
          <children>
-            <Label fx:id="intervalStartLabel" text="Начало отрезка" />
+            <Label fx:id="intervalStartLabel" text="Начало отрезка:" />
             <TextField fx:id="intervalStartField" />
-            <Label fx:id="intervalEndLabel" text="Конец отрезка" />
+            <Label fx:id="intervalEndLabel" text="Конец отрезка:" />
             <TextField fx:id="intervalEndField" />
-            <Label fx:id="topValuesLabel" text="Верх значений " />
+            <Label fx:id="topValuesLabel" text="Верх значений: " />
             <TextField fx:id="topValuesField" />
-            <Label fx:id="bottomValuesLabel" text="Низ значений" />
+            <Label fx:id="bottomValuesLabel" text="Низ значений:" />
             <TextField fx:id="bottomValuesField" />
-            <Label fx:id="nodesAmountLabel" text="Количество узлов" />
+            <Label fx:id="nodesAmountLabel" text="Количество узлов" wrapText="true" />
             <TextField fx:id="nodesAmountField" />
             <Label fx:id="alphaLabel" text="a" />
             <TextField fx:id="alphaField" />
