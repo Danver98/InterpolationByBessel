@@ -33,7 +33,8 @@ public class BesselPolynom {
         this.nodesAmount = nodesAmount;
         this.function = function;
         y = new double[nodesAmount];
-        // this.initSum = (yPos[0]+ yNeg[1])/2;    разобраться!
+        initValues();
+        this.initSum = (yPos[0]+ yNeg[1])/2;
     }
 
     private void initValuesNeg(){
@@ -57,8 +58,6 @@ public class BesselPolynom {
                 yPos[i] = function.apply(x);
             }
             x0=yPos[0];
-
-
         // nodesAmount -=2;
     }
 
