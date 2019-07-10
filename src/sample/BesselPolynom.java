@@ -15,9 +15,7 @@ public class BesselPolynom {
     private double end;
     private int nodesAmount;
     private double y[];
-    private double xPos[];
     private double yPos[];
-    private double xNeg[];
     private double yNeg[];
     private Function<Double,Double> function;
     private Function<Double,Double> besselPolynom;
@@ -73,12 +71,11 @@ public class BesselPolynom {
         else {
 
         }
-
         // nodesAmount -=2;
     }
 
     public double besselPolynomAt(double x){
-        double q = (x -x0)/step,resInter=0,qInter =0;
+        double q = (x -x0)/step,resInter=0,qInter =0 , rest = 0;
         BigInteger fact = BigInteger.ONE;
         nodesAmount>>=1;    // по половине узлов
         double res = initSum + (q- 0.5) * diff(1,0);          // конечная разность должна идти по отрицательным индексам
@@ -92,7 +89,7 @@ public class BesselPolynom {
     }
 
     public double besselPolynomAtNeg(double x){
-        double q = (x -x0)/step,resInter=0,qInter =0;
+        double q = (x -x0)/step,resInter=0,qInter =0,rest = 0;
         BigInteger fact = BigInteger.ONE;
         double res = initSum + (q- 0.5) * diff(1,0);
         for(int i=1;i<=yNeg.length;i++){
@@ -199,6 +196,5 @@ public class BesselPolynom {
 
         return a;
     }
-
 
 }
