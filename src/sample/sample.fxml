@@ -33,7 +33,7 @@
          <children>
             <Button fx:id="functionButton" mnemonicParsing="false" prefHeight="29.0" prefWidth="80.0" text="Функция" />
             <Button fx:id="polygonButton" mnemonicParsing="false" onAction="#buildPolynom" prefHeight="29.0" prefWidth="80.0" text="Полином" />
-            <Button fx:id="diiferenceButton" mnemonicParsing="false" prefHeight="29.0" prefWidth="80.0" text="Разница" />
+            <Button fx:id="diiferenceButton" mnemonicParsing="false" onAction="#buildDifference" prefHeight="29.0" prefWidth="80.0" text="Разница" />
          </children>
       </HBox>
       <VBox alignment="CENTER" prefHeight="545.0" prefWidth="100.0" spacing="5.0">

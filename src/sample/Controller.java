@@ -4,7 +4,6 @@ import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
-import javafx.geometry.Side;
 import javafx.scene.chart.LineChart;
 import javafx.scene.chart.NumberAxis;
 import javafx.scene.chart.XYChart;
@@ -16,7 +15,17 @@ import java.util.function.Function;
 public class Controller {
 
     private IntegerProperty precision = new SimpleIntegerProperty(2);
+    private IntegerProperty step = new SimpleIntegerProperty(1);
     private Function<Double,Double> function;
+    private double start = -10;
+    private double end = 10;
+    private double top = 10;
+    private double bottom = -10;
+    private double alpha = 1 ;
+    private double beta = 1;
+    private double epsilon = 1;
+    private double mu = 1;
+    private int nodesAmount = 30;
     public static String alphaCode = "\u03B1"+":";
     public static String betaCode = "\u03B2"+":";
     public static String epsCode = "\u03B5"+":";
@@ -94,7 +103,6 @@ public class Controller {
     @FXML
     private TextField muField;
 
-
     @FXML
     private Button buildButton;
 
@@ -106,20 +114,52 @@ public class Controller {
         muLabel.setText(muCode);
     }
 
+    public int getPrecision() {
+        return precision.get();
+    }
+
+    public void setPrecision(int precision){
+        this.precision.set(precision);
+    }
+
+    public int getStep() {
+        return step.get();
+    }
+
+    public void setStep(int step) {
+        this.step.set(step);
+    }
+
+    @FXML
+    private void build(ActionEvent event){
+            lineChart.getData().clear();
+        try {
+            start = Double.parseDouble(intervalStartField.getText());
+            end = Double.parseDouble(intervalEndField.getText());
+            bottom = Double.parseDouble(bottomValuesField.getText());
+            top = Double.parseDouble(topValuesField.getText());
+            xAxis.setLowerBound(start);
+            xAxis.setUpperBound(end);
+            yAxis.setLowerBound(bottom);
+            yAxis.setUpperBound(top);
+            alpha = Double.parseDouble(alphaField.getText());
+            beta = Double.parseDouble(betaField.getText());
+            epsilon = Double.parseDouble(epsField.getText());
+            mu = Double.parseDouble(muField.getText());
+            nodesAmount = Integer.parseInt(nodesAmountField.getText());
+        }
+        catch(NumberFormatException e ){
+            // какой-нибудь Alert!
+        }
+        // проверка условий(что строить)
+    }
+
     @FXML
     private void buildFunction(ActionEvent event) {
         XYChart.Series<Double,Double> series = new XYChart.Series<Double,Double>();
-        double a = 1 , b = 1 , e = 1, m = 1;
-        function= (x) -> a* Math.sin(b*x) * Math.cos(e/ Math.pow(x - m,2));
-        //Function<Double,Double> function = (x) ->  Math.cos(x)*Math.sin(x)+ 2*x ;
+        function= (x) -> alpha* Math.sin(beta*x) * Math.cos(epsilon/ Math.pow(x - mu,2));
         series.setName("Trial");
-        //xAxis.setLowerBound(-20);
-        //xAxis.setUpperBound(-10);
-        //for(double t = 0 ; t <= Math.PI;t+=0.1){
-            //series.getData().add(new XYChart.Data<Double,Double>(Math.cos(t),Math.sin(t)));
-        //}
-        //for(double x = -10; x <= 10 ; x+=Math.pow(10, -precision){
-        for(double x = -10; x <= 10 ; x+=0.1){
+        for(double x = start; x <= end ; x+=Math.pow(10, -step.get())){
            x = (double)((int)Math.round(x*Math.pow(10,precision.get()))) /Math.pow(10,precision.get());
             series.getData().add(new XYChart.Data<Double,Double>(x,function.apply(x)));
         }
@@ -127,12 +167,25 @@ public class Controller {
     }
 
     @FXML
-    private void setPrecision(int precision){
-        this.precision.set(precision);
+    private void buildPolynom(ActionEvent event) {
+        XYChart.Series<Double, Double> series = new XYChart.Series<Double, Double>();
+        BesselPolynom b = new BesselPolynom(start,end,function,nodesAmount);
+        Function<Double , Double> polynom = (x) -> b.besselPolynomAt(x);
+        for(double x = start ; x <=end; x+=Math.pow(10, -step.get())){
+            series.getData().add(new XYChart.Data<Double,Double>(x,polynom.apply(x)));
+        }
+        lineChart.getData().add(series);
     }
 
     @FXML
-    private void buildPolynom(ActionEvent event) {
-
+    void buildDifference(ActionEvent event) {
+        XYChart.Series<Double, Double> series = new XYChart.Series<Double, Double>();
+        BesselPolynom b = new BesselPolynom(start,end,function,nodesAmount);
+        Function<Double , Double> polynom = (x) -> b.besselPolynomAt(x);
+        for(double x = start ; x <=end; x+=Math.pow(10, -step.get())){
+            series.getData().add(new XYChart.Data<Double,Double>(x,function.apply(x) - polynom.apply(x)));
+        }
+        lineChart.getData().add(series);
     }
+
 }
