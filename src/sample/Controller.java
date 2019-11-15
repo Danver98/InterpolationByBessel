@@ -2,14 +2,18 @@ package sample;
 
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.SimpleIntegerProperty;
+import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.chart.LineChart;
 import javafx.scene.chart.NumberAxis;
 import javafx.scene.chart.XYChart;
-import javafx.scene.control.Button;
-import javafx.scene.control.Label;
-import javafx.scene.control.TextField;
+import javafx.scene.control.*;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyEvent;
+
+import java.util.Iterator;
+import java.util.ListIterator;
 import java.util.function.Function;
 
 public class Controller {
@@ -25,7 +29,10 @@ public class Controller {
     private double beta = 1;
     private double epsilon = 1;
     private double mu = 1;
+    private double xStep = 0.1;
     private int nodesAmount = 30;
+    ObservableList<TextField>  textFieldsList;
+    XYChart.Series<Double, Double> polynomSeries;
     public static String alphaCode = "\u03B1"+":";
     public static String betaCode = "\u03B2"+":";
     public static String epsCode = "\u03B5"+":";
@@ -41,13 +48,19 @@ public class Controller {
     private NumberAxis yAxis;
 
     @FXML
-    private Button functionButton;
+    private CheckBox functionCheckBox;
 
     @FXML
-    private Button polygonButton;
+    private CheckBox polynomCheckBox;
 
     @FXML
-    private Button diiferenceButton;
+    private CheckBox diffCheckBox;
+
+    @FXML
+    private ProgressBar progBar;
+
+    @FXML
+    private ProgressIndicator progIndicator;
 
     @FXML
     private Label intervalStartLabel;
@@ -104,6 +117,12 @@ public class Controller {
     private TextField muField;
 
     @FXML
+    private Label stepLabel;
+
+    @FXML
+    private TextField stepField;
+
+    @FXML
     private Button buildButton;
 
     @FXML
@@ -112,6 +131,29 @@ public class Controller {
         betaLabel.setText(betaCode);
         epsLabel.setText(epsCode);
         muLabel.setText(muCode);
+        polynomSeries = new XYChart.Series<>();
+        buildButton.addEventHandler(KeyEvent.KEY_PRESSED, event -> {
+            if(event.getCode() == KeyCode.ENTER){
+                build(new ActionEvent());
+            }
+        });
+        textFieldsList.addAll(intervalStartField,intervalEndField,bottomValuesField,topValuesField,nodesAmountField,alphaField,betaField,epsField,muField);
+        for(TextField tf: textFieldsList){
+            tf.addEventHandler(KeyEvent.KEY_PRESSED , event -> {
+                if(event.getCode() == KeyCode.KP_DOWN){
+                    TextField t = textFieldsList.get(textFieldsList.indexOf(tf) + 1);
+                    // setFocused
+                }
+            });
+        }
+    }
+
+    public double getMu(){
+        return mu;
+    }
+
+    public void setMu(double mu){
+        this.mu = mu;
     }
 
     public int getPrecision() {
@@ -130,9 +172,18 @@ public class Controller {
         this.step.set(step);
     }
 
+    private boolean in(double x,double arr[]){
+        for(int i=0;i<arr.length;i++){
+            if(x == arr[i])
+                return true;
+        }
+        return false;
+    }
+
     @FXML
     private void build(ActionEvent event){
             lineChart.getData().clear();
+            polynomSeries.getData().clear();
         try {
             start = Double.parseDouble(intervalStartField.getText());
             end = Double.parseDouble(intervalEndField.getText());
@@ -147,45 +198,82 @@ public class Controller {
             epsilon = Double.parseDouble(epsField.getText());
             mu = Double.parseDouble(muField.getText());
             nodesAmount = Integer.parseInt(nodesAmountField.getText());
+            xStep = Double.parseDouble(stepField.getText());
+
         }
         catch(NumberFormatException e ){
             // какой-нибудь Alert!
         }
         // проверка условий(что строить)
+        // здесь можно распараллелить
+        if(functionCheckBox.isSelected()){
+            buildFunction();
+        }
+        if(polynomCheckBox.isSelected()){
+            buildPolynom();
+        }
+        if(diffCheckBox.isSelected()){
+            buildDifference();
+        }
+
     }
 
-    @FXML
-    private void buildFunction(ActionEvent event) {
+    private int digitsAfterPoint(double number){
+        int order = 0;
+        while(number < 1){
+             number*=10;
+             order++;
+         }
+        return order;
+    }
+
+    private void buildFunction() {
         XYChart.Series<Double,Double> series = new XYChart.Series<Double,Double>();
         function= (x) -> alpha* Math.sin(beta*x) * Math.cos(epsilon/ Math.pow(x - mu,2));
         series.setName("Trial");
-        for(double x = start; x <= end ; x+=Math.pow(10, -step.get())){
-           x = (double)((int)Math.round(x*Math.pow(10,precision.get()))) /Math.pow(10,precision.get());
+        int order = digitsAfterPoint(xStep);
+        for(double x = start; x <= end ; x+=xStep){
+            x = (double)((int)Math.round(x*Math.pow(10,order))) /Math.pow(10,order);
             series.getData().add(new XYChart.Data<Double,Double>(x,function.apply(x)));
         }
         lineChart.getData().add(series);
+        series.getData().forEach( x-> System.out.println( x.getXValue() + " -> " +x.getYValue()));
     }
 
-    @FXML
-    private void buildPolynom(ActionEvent event) {
-        XYChart.Series<Double, Double> series = new XYChart.Series<Double, Double>();
-        BesselPolynom b = new BesselPolynom(start,end,function,nodesAmount);
-        Function<Double , Double> polynom = (x) -> b.besselPolynomAt(x);
-        for(double x = start ; x <=end; x+=Math.pow(10, -step.get())){
+    private void buildPolynom() {
+        function= (x) -> alpha* Math.sin(beta*x) * Math.cos(epsilon/ Math.pow(x - mu,2));
+        BesselPolynom b = new BesselPolynom(this,start,end,function,nodesAmount);
+        /*for(int i=0;i < b.getX().length;i++){
+            series.getData().add(new XYChart.Data<Double,Double>(b.getX()[i] , b.getY()[i]));
+        }*/
+        Function<Double,Double> polynom = (x) -> b.besselPolynomAtNeg(x);
+        for(double x = start ; x <=end; x+=xStep){
+           /* if(in(x,b.getX())) {
+                continue;
+            }*/
+            polynomSeries.getData().add(new XYChart.Data<Double,Double>(x,polynom.apply(x)));
+        }
+        System.out.println("Calculation is over");
+        /*for(double x = start ; x <=end; x+=Math.pow(10, -step.get())){
             series.getData().add(new XYChart.Data<Double,Double>(x,polynom.apply(x)));
+        }*/
+        lineChart.getData().add(polynomSeries);
+        //polynomSeries.getData().forEach((x) -> System.out.println(x.getXValue() + " -> " + x.getYValue()));
+    }
+
+    private void buildDifference() {
+        if(!polynomCheckBox.isSelected()){
+            buildPolynom();
+        }
+        XYChart.Series<Double, Double> series = new XYChart.Series<Double, Double>();
+        BesselPolynom b = new BesselPolynom(this,start,end,function,nodesAmount);
+        //Function<Double , Double> polynom = (x) -> b.besselPolynomAt(x);
+        for(double x = start ; x <=end; x+=xStep){
+            final double val = x;
+            series.getData().add(new XYChart.Data<Double,Double>(x,function.apply(x) - polynomSeries.getData().stream().filter(obj -> obj.getXValue() == val).findFirst().get().getYValue()));
         }
         lineChart.getData().add(series);
     }
 
-    @FXML
-    void buildDifference(ActionEvent event) {
-        XYChart.Series<Double, Double> series = new XYChart.Series<Double, Double>();
-        BesselPolynom b = new BesselPolynom(start,end,function,nodesAmount);
-        Function<Double , Double> polynom = (x) -> b.besselPolynomAt(x);
-        for(double x = start ; x <=end; x+=Math.pow(10, -step.get())){
-            series.getData().add(new XYChart.Data<Double,Double>(x,function.apply(x) - polynom.apply(x)));
-        }
-        lineChart.getData().add(series);
-    }
 
 }

@@ -5,7 +5,10 @@
 <?import javafx.scene.chart.LineChart?>
 <?import javafx.scene.chart.NumberAxis?>
 <?import javafx.scene.control.Button?>
+<?import javafx.scene.control.CheckBox?>
 <?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ProgressBar?>
+<?import javafx.scene.control.ProgressIndicator?>
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.layout.ColumnConstraints?>
 <?import javafx.scene.layout.GridPane?>
@@ -31,9 +34,16 @@
         </LineChart>
       <HBox alignment="CENTER" prefHeight="90.0" prefWidth="834.0" spacing="50.0" GridPane.columnIndex="1" GridPane.halignment="CENTER" GridPane.rowIndex="3" GridPane.valignment="CENTER">
          <children>
-            <Button fx:id="functionButton" mnemonicParsing="false" prefHeight="29.0" prefWidth="80.0" text="Функция" />
-            <Button fx:id="polygonButton" mnemonicParsing="false" onAction="#buildPolynom" prefHeight="29.0" prefWidth="80.0" text="Полином" />
-            <Button fx:id="diiferenceButton" mnemonicParsing="false" onAction="#buildDifference" prefHeight="29.0" prefWidth="80.0" text="Разница" />
+            <Label fx:id="stepLabel" text="Шаг:">
+               <HBox.margin>
+                  <Insets right="-30.0" />
+               </HBox.margin>
+            </Label>
+            <TextField fx:id="stepField" prefHeight="25.0" prefWidth="79.0" />
+            <CheckBox fx:id="functionCheckBox" mnemonicParsing="false" text="Функция:" />
+            <CheckBox fx:id="polynomCheckBox" mnemonicParsing="false" text="Полином:" />
+            <CheckBox fx:id="diffCheckBox" mnemonicParsing="false" text="Разница:" />
+            <ProgressBar fx:id="progBar" prefWidth="200.0" progress="0.0" />
          </children>
       </HBox>
       <VBox alignment="CENTER" prefHeight="545.0" prefWidth="100.0" spacing="5.0">
@@ -42,10 +52,10 @@
             <TextField fx:id="intervalStartField" />
             <Label fx:id="intervalEndLabel" text="Конец отрезка:" />
             <TextField fx:id="intervalEndField" />
-            <Label fx:id="topValuesLabel" text="Верх значений: " />
-            <TextField fx:id="topValuesField" />
             <Label fx:id="bottomValuesLabel" text="Низ значений:" />
             <TextField fx:id="bottomValuesField" />
+            <Label fx:id="topValuesLabel" text="Верх значений: " />
+            <TextField fx:id="topValuesField" />
             <Label fx:id="nodesAmountLabel" text="Количество узлов" wrapText="true" />
             <TextField fx:id="nodesAmountField" />
             <Label fx:id="alphaLabel" text="a" />
@@ -56,13 +66,14 @@
             <TextField fx:id="epsField" />
             <Label fx:id="muLabel" text="mu" />
             <TextField fx:id="muField" />
-            <Button fx:id="buildButton" mnemonicParsing="false" onAction="#buildFunction" prefHeight="29.0" prefWidth="80.0" text="Построить">
+            <Button fx:id="buildButton" mnemonicParsing="false" onAction="#build" prefHeight="29.0" prefWidth="80.0" text="Построить">
                <VBox.margin>
                   <Insets top="30.0" />
                </VBox.margin>
             </Button>
          </children>
       </VBox>
+      <ProgressIndicator fx:id="progIndicator" progress="0.0" GridPane.rowIndex="3" />
     </children>
    <columnConstraints>
       <ColumnConstraints />

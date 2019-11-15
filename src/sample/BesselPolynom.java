@@ -6,15 +6,17 @@ import java.util.function.Function;
 import java.math.*;
 
 public class BesselPolynom {
-
+    public static double EPSILON = 0.00000001;
+    public static double SHIFT = 0.0000001;
+    private Controller controller;
     private double step;
-    private double sum;
     private double initSum;
     private double x0;
     private double start;
     private double end;
     private int nodesAmount;
     private double y[];
+    private double x[];
     private double yPos[];
     private double yNeg[];
     private Function<Double,Double> function;
@@ -25,83 +27,115 @@ public class BesselPolynom {
 
     }
 
-    public BesselPolynom(double start, double end, Function<Double, Double> function, int nodesAmount) {
+   /* public BesselPolynom(double start, double end, Function<Double, Double> function, int nodesAmount) {
         this.start = start;
         this.end = end;
         this.nodesAmount = nodesAmount;
         this.function = function;
         y = new double[nodesAmount];
-        initValues();
+        initValuesNeg();
         this.initSum = (yPos[0]+ yNeg[1])/2;
+    }*/
+
+    public BesselPolynom(Controller controller , double start, double end, Function<Double, Double> function, int nodesAmount) {
+        this.controller = controller;
+        this.start = start;
+        this.end = end;
+        if(nodesAmount %2 ==0){
+            this.nodesAmount = nodesAmount;
+        }
+        else{
+            this.nodesAmount = nodesAmount + 1;
+        }
+        this.function = function;
+        y = new double[this.nodesAmount];
+        x = new double[this.nodesAmount];
+        System.out.println(y.length);
+        initValuesSym();
+        initSum =( y[(this.nodesAmount>>1)] + y[(this.nodesAmount>>1) - 1])/2;
     }
 
-    private void initValuesNeg(){
-        double x = start;
-        if(nodesAmount % 2 ==0) {
-            yNeg = new double[nodesAmount >> 1];
-            yPos = new double[nodesAmount >> 1 + 1];
-            this.step = (end + start) / nodesAmount;
-        }
-        else {
-            yNeg = new double[(nodesAmount +1)>>1];
-            yPos = new double[(nodesAmount +1)>>1 +1];
-            this.step = (end+start) / (nodesAmount + 1);
-        }
-            for(int i=0,j = yNeg.length-1; i <yNeg.length;i++,j--){
-                x+=i*step;
-                yNeg[j] = function.apply(x);
-            }
-            for(int i=0; i< yPos.length;i++){
-                x+=i*step;
-                yPos[i] = function.apply(x);
-            }
-            x0=yPos[0];
-        // nodesAmount -=2;
+    public double[] getX() {
+        return x;
     }
 
-    private void initValues(){
+    public double[] getY() {
+        return y;
+    }
+
+    private void initValuesSym(){                    // можно распараллелить ; проверка,если x == epsilon
         double x;
-        if(nodesAmount % 2 ==0){
-            this.step = (end - start) / nodesAmount;
-            for(int i=0,j = nodesAmount-1; i <nodesAmount;i++,j--){
-                x = start + i*step;
-                y[j] = function.apply(x);
+        step = (end - start) / nodesAmount;
+        double middle =(start + end) / 2;
+        for (int i=0; i < (nodesAmount>>1);i++) {
+            x = middle - (0.5 + i)*step;
+            if(Math.abs(x - controller.getMu()) < EPSILON){
+                x+=SHIFT;
             }
+            this.x[(nodesAmount>>1) -1 - i] = x;
+            y[(nodesAmount>>1) -1 - i] = function.apply(x);
+            x = middle + (0.5 + i)*step;
+            if(Math.abs(x - controller.getMu()) < EPSILON){
+                x-=SHIFT;
+            }
+            this.x[(nodesAmount>>1)+ i] = x;
+            y[(nodesAmount>>1)+ i] = function.apply(x);
         }
-        else {
+        System.out.println(" Start = " + start + " End = " + end + " Step = " + step + " Middle= " + (middle =(start + end) / 2));
+        for (int i=0 ; i < this.x.length;i++) {
+            System.out.printf("%.7f ",this.x[i]);
+        }
+        System.out.println();
 
+        for (int i=0; i < y.length; i++) {
+            System.out.printf("%.3f ",y[i]);
         }
-        // nodesAmount -=2;
     }
 
     public double besselPolynomAt(double x){
         double q = (x -x0)/step,resInter=0,qInter =0 , rest = 0;
         BigInteger fact = BigInteger.ONE;
-        nodesAmount>>=1;    // по половине узлов
+        int nodes = nodesAmount>>1;    // по половине узлов
         double res = initSum + (q- 0.5) * diff(1,0);          // конечная разность должна идти по отрицательным индексам
-        for(int i=1;i<=nodesAmount;i++){
+        for(int i=1;i<=nodes;i++){
             for(int j = 2*i - 1;j <=2*i;j++)
                 fact=fact.multiply(BigInteger.valueOf(j));
             qInter*=(q-i)*(q+i-1)/fact.longValueExact();
             res+=qInter*((diff(2*i,i*(-1)) + diff(2*i,(i-1)*(-1)))/2 + (q-0.5)*diff(2*i+1,i*(-1))/(2*i+1));
         }
         return res;
-    }
+    }                        // longValueExact()
 
     public double besselPolynomAtNeg(double x){
-        double q = (x -x0)/step,resInter=0,qInter =0,rest = 0;
-        BigInteger fact = BigInteger.ONE;
+        double q = (x -x0)/step,resInter=0,rest = 0;
+        BigDecimal qInter = BigDecimal.ONE, fact = BigDecimal.ONE;
+        int m= (nodesAmount-2)>>1;
         double res = initSum + (q- 0.5) * diff(1,0);
-        for(int i=1;i<=yNeg.length;i++){
+        for(int i=1;i<=m;i++){
             for(int j = 2*i - 1;j <=2*i;j++)
-                fact=fact.multiply(BigInteger.valueOf(j));
-            qInter*=(q-i)*(q+i-1)/fact.longValueExact();
-            res+=qInter*((diffNeg(2*i,i*(-1)) + diffNeg(2*i,(i-1)*(-1)))/2 + (q-0.5)*diffNeg(2*i+1,i*(-1))/(2*i+1));
+                fact=fact.multiply(BigDecimal.valueOf(j));
+            qInter=qInter.multiply((BigDecimal.valueOf((q-i)*(q+i-1)))).divide(fact,RoundingMode.HALF_UP);
+            res+=qInter.doubleValue()*((diffBig(2*i,m - i).doubleValue() + diffBig(2*i,(m-(i-1))).doubleValue())/2 + (q-0.5)*diffBig(2*i+1,m - i).doubleValue()/(2*i+1));
         }
         return res;
     }
 
-    private double binom(double a , double b , int n){
+    public double besselPolynomAtNegRec(double x){
+        double q = (x -x0)/step,resInter=0,qInter =0,rest = 0;
+        BigInteger fact = BigInteger.ONE;
+        int m= (nodesAmount-2)>>1;
+        double res = initSum + (q- 0.5) * diff(1,0);
+        for(int i=1;i<=m;i++){
+            System.out.println(" i = " + i + " , 2i+1 = " + (2*i+1)+ " , m - i = " + (m-i) + " , m - i - 1 = " + (m - i-1) + " , m = " + m);
+            for(int j = 2*i - 1;j <=2*i;j++)
+                fact=fact.multiply(BigInteger.valueOf(j));
+            qInter*=(q-i)*(q+i-1)/fact.longValueExact();
+            res+=qInter*((diffRec(2*i,m-i) + diffRec(2*i,(m-(i-1))))/2 + (q-0.5)*diffRec(2*i+1,m - i)/(2*i+1));
+        }
+        return res;
+    }                           // longValueExact()
+
+    private double binom(double a , double b , int n){                           // longValueExact()
         double sum = 0;
         for(int k=0 ; k<=n;k++){
             sum+=comb(k,n).longValueExact()*Math.pow(a,n-k)* Math.pow(b,k);
@@ -125,22 +159,24 @@ public class BesselPolynom {
         }
         else {
             double sum = 0;
-            for(int i=0; i < order;i++){
-                sum+=Math.pow(-1,i)* comb(i,order).longValueExact()*y[k+order-i];
+            for(int j=0; j < order;j++){
+                sum+=Math.pow(-1,j)* comb(j,order).longValueExact()*y[k+order-j];
             }
             return sum;
         }
 
-    }
+    }                      // longValueExact()
 
-    private double diffNeg(int order, int k) {
+    private BigDecimal diffBig(int order, int k) {
         if(order ==1){
-            return yNeg[k+1] - yNeg[k];
+            return BigDecimal.valueOf(y[k+1] - y[k]);
         }
         else {
-            double sum = 0;
-            for(int i=0; i < order;i++){
-                sum+=Math.pow(-1,i)* comb(i,order).longValueExact()*yNeg[k+order-i];
+            BigDecimal sum = BigDecimal.ZERO;
+            for(int j=0; j < order;j++){
+                //sum+=Math.pow(-1,j)* comb(j,order).longValueExact()*y[k+order-j];
+                double t = Math.pow(-1,j)*y[k+order-j];
+                sum = sum.add(BigDecimal.valueOf(Math.pow(-1,j)*y[k+order-j]).multiply(new BigDecimal(comb(j,order))));
             }
             return sum;
         }
@@ -153,16 +189,6 @@ public class BesselPolynom {
         }
         else {
             return diffRec(order -1 , k + 1) - diffRec(order - 1 , k);
-        }
-
-    }
-
-    private double diffRecNeg(int order, int k){
-        if(order ==1){
-            return yNeg[k+1] - yNeg[k];
-        }
-        else {
-            return diffRecNeg(order -1 , k + 1) - diffRecNeg(order - 1 , k);
         }
 
     }
